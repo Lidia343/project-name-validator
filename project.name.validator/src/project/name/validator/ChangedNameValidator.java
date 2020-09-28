@@ -16,7 +16,9 @@ public class ChangedNameValidator
 	
 	private IProject m_project;
 	
-	private boolean m_setProblemMarker = false;
+	private boolean m_createProblemMarker = false;
+	
+	private final String m_problemNameMarkerAttribute = "PROBLEM_NAME_MARKER_ATTRIBUTE";
 	
 	public void addChangedNameListeners ()
 	{
@@ -53,8 +55,8 @@ public class ChangedNameValidator
 				if (preRefreshResource == null) return;
 				String newName = preRefreshResource.getName();
 				
-				if (!newName.equals(pathLastSegment)) m_setProblemMarker = true;
-				else m_setProblemMarker = false;
+				if (!newName.equals(pathLastSegment)) m_createProblemMarker = true;
+				else m_createProblemMarker = false;
 				
 				m_project = preRefreshResource.getProject();
 			}
@@ -71,13 +73,21 @@ public class ChangedNameValidator
 				if (m_project == null) return;
 				try
 				{
-					if (m_setProblemMarker) m_project.createMarker(IMarker.PROBLEM);
+					if (m_createProblemMarker)
+					{
+						IMarker marker = m_project.createMarker(IMarker.PROBLEM);
+						marker.setAttribute(m_problemNameMarkerAttribute, "problem_name");
+					}
 					else
 					{
 						IMarker[] markers = m_project.findMarkers(IMarker.PROBLEM, false, IResource.DEPTH_INFINITE);
 						if (markers.length == 1)
 						{
-							markers[0].delete();
+							IMarker marker = markers[0];
+							if (marker.getAttribute(m_problemNameMarkerAttribute, null) != null)
+							{
+								marker.delete();
+							}
 						}
 					}
 				}
