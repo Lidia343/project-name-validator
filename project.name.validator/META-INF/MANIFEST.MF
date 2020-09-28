@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Project Name Validator
+Bundle-SymbolicName: project.name.validator;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Automatic-Module-Name: project.name.validator
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Export-Package: project.name.validator, project.name.validator.main
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.ui,
+ org.eclipse.core.resources
