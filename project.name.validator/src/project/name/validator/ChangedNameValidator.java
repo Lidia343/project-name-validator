@@ -18,6 +18,35 @@ public class ChangedNameValidator
 	
 	private boolean m_createProblemMarker = false;
 	
+	public void validateExistingProjectNames ()
+	{
+		IWorkspace workspace = ResourcesPlugin.getWorkspace();
+		IProject[] projects = workspace.getRoot().getProjects();
+		if (projects == null) return;
+		for (IProject project : projects)
+		{
+			validateProjectName(project);
+		}
+	}
+	
+	private void validateProjectName (IProject a_project)
+	{
+		String name = a_project.getName();
+		String pathLastSegment = a_project.getFullPath().lastSegment();
+		if (!name.equals(pathLastSegment))
+		{
+			ProblemNameMarkerManager manager = new ProblemNameMarkerManager(a_project);
+			try
+			{
+				manager.createMarker();
+			}
+			catch (CoreException e)
+			{
+				e.printStackTrace();
+			}
+		}
+	}
+	
 	public void addChangedNameListeners ()
 	{
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
