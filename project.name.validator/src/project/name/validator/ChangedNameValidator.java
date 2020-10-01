@@ -1,5 +1,9 @@
 package project.name.validator;
 
+import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.commands.NotEnabledException;
+import org.eclipse.core.commands.NotHandledException;
+import org.eclipse.core.commands.common.NotDefinedException;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
@@ -9,14 +13,17 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 
 import project.name.validator.marker.ProblemNameMarkerManager;
+import project.name.validator.refresh.RefreshExecutor;
 
 public class ChangedNameValidator
-{
+{	
 	private IResource m_preChangeResource;
 	
 	private ProblemNameMarkerManager m_markerManager;
 	
 	private boolean m_createProblemMarker = false;
+	
+	private RefreshExecutor m_refreshExecutor= new RefreshExecutor();
 	
 	public void validateExistingProjectNames ()
 	{
@@ -62,7 +69,9 @@ public class ChangedNameValidator
 			@Override
 			public void resourceChanged (IResourceChangeEvent a_event)
 			{
-				m_preChangeResource = a_event.getResource();
+				IResource resource = a_event.getResource();
+				if (resource == null  || resource.getType() != IResource.PROJECT) return;
+				m_preChangeResource = resource;
 			}
 		};
 	}
@@ -101,10 +110,19 @@ public class ChangedNameValidator
 				if (m_markerManager == null || m_markerManager.getProject() == null) return;
 				try
 				{
-					if (m_createProblemMarker) m_markerManager.createMarker();
-					else m_markerManager.deleteMarker();
+					boolean changed = false;
+					if (m_createProblemMarker)
+					{
+						if (m_markerManager.createMarker()) changed = true;
+					}
+					else
+					{
+						if (m_markerManager.deleteMarker()) changed = true;
+					}
+					if (changed) m_refreshExecutor.refresh();
 				}
-				catch (CoreException e)
+				catch (CoreException | ExecutionException | NotDefinedException | NotEnabledException |
+					   NotHandledException e)
 				{
 					e.printStackTrace();
 				}
