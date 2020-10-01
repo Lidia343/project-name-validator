@@ -23,21 +23,27 @@ public class ProblemNameMarkerManager
 		m_project = Objects.requireNonNull(a_project);
 	}
 	
-	public void createMarker () throws CoreException
+	public boolean createMarker () throws CoreException
 	{
-		if (markerExists()) return;
+		if (markerExists()) return false;
 		IMarker marker = m_project.createMarker(IMarker.PROBLEM);
 		marker.setAttribute(MARKER_ATTRIBUTE_PROBLEM_NAME, MARKER_ATTRIBUTE_VALUE_PROBLEM_NAME);
 		marker.setAttribute(IMarker.LOCATION, m_project.getLocation().toString());
 		marker.setAttribute(IMarker.MESSAGE, MARKER_ATTRIBUTE_VALUE_MESSAGE);
 		marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
 		marker.setAttribute(IMarker.USER_EDITABLE, false);
+		return true;
 	}
 	
-	public void deleteMarker () throws CoreException
+	public boolean deleteMarker () throws CoreException
 	{
 		IMarker marker = findMarker();
-		if (marker != null) marker.delete();
+		if (marker != null) 
+		{
+			marker.delete();
+			return true;
+		}
+		return false;
 	}
 	
 	public boolean markerExists () throws CoreException
