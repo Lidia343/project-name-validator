@@ -12,6 +12,8 @@ import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 
+import project.name.validator.log.ErrorStatusHandler;
+import project.name.validator.log.Messages;
 import project.name.validator.marker.ProblemNameMarkerManager;
 import project.name.validator.refresh.RefreshExecutor;
 
@@ -59,14 +61,27 @@ public class ChangedNameValidator
 		String name = a_project.getName();
 		String pathLastSegment = a_project.getLocation().lastSegment();
 		ProblemNameMarkerManager manager = new ProblemNameMarkerManager(a_project);
-		try
+		if (!name.equals(pathLastSegment))
 		{
-			if (!name.equals(pathLastSegment)) manager.createMarker();
-			else manager.deleteMarker();
+			try
+			{
+				manager.createMarker();
+			}
+			catch (CoreException e)
+			{
+				ErrorStatusHandler.log(e, Messages.Exception_Marker_Creation);
+			}
 		}
-		catch (CoreException e)
+		else
 		{
-			e.printStackTrace();
+			try
+			{
+				manager.deleteMarker();
+			}
+			catch (CoreException e)
+			{
+				ErrorStatusHandler.log(e, Messages.Exception_Marker_Deletion);
+			}
 		}
 	}
 	
@@ -161,23 +176,40 @@ public class ChangedNameValidator
 				if (m_markerManager == null) return;
 				IResource resource =  m_markerManager.getResource();
 				if (resource == null || !resource.exists()) return;
-				try
+				boolean changed = false;
+				if (m_createProblemMarker)
 				{
-					boolean changed = false;
-					if (m_createProblemMarker)
+					try
 					{
 						if (m_markerManager.createMarker()) changed = true;
 					}
-					else
+					catch (CoreException e)
+					{
+						ErrorStatusHandler.log(e, Messages.Exception_Marker_Creation);
+					}
+				}
+				else
+				{
+					try
 					{
 						if (m_markerManager.deleteMarker()) changed = true;
 					}
-					if (changed) m_refreshExecutor.refresh();
+					catch (CoreException e)
+					{
+						ErrorStatusHandler.log(e, Messages.Exception_Marker_Deletion);
+					}
 				}
-				catch (CoreException | ExecutionException | NotDefinedException | NotEnabledException |
-					   NotHandledException e)
+				if (changed)
 				{
-					e.printStackTrace();
+					try
+					{
+						m_refreshExecutor.refresh();
+					}
+					catch (ExecutionException | NotDefinedException | NotEnabledException |
+						   NotHandledException e)
+					{
+						ErrorStatusHandler.log(e, Messages.Exception_Workspace_Refreshing);
+					}
 				}
 			}
 		};
