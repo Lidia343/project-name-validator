@@ -47,7 +47,8 @@ public class ChangedNameValidator
 	/**
 	 * Проверяет имя проекта a_project.
 	 * Если имя проекта не совпадает с именем папки проекта в
-	 * файловой системе, на проект ставится маркер проблемы.
+	 * файловой системе, на проект ставится маркер проблемы,
+	 * иначе маркер удаляется.
 	 * @param a_project
 	 * 		  Проект, имя которого необходимо проверить. NotNull
 	 */
@@ -56,17 +57,15 @@ public class ChangedNameValidator
 		if (!a_project.exists()) return;
 		String name = a_project.getName();
 		String pathLastSegment = a_project.getLocation().lastSegment();
-		if (!name.equals(pathLastSegment))
+		ProblemNameMarkerManager manager = new ProblemNameMarkerManager(a_project);
+		try
 		{
-			ProblemNameMarkerManager manager = new ProblemNameMarkerManager(a_project);
-			try
-			{
-				manager.createMarker();
-			}
-			catch (CoreException e)
-			{
-				e.printStackTrace();
-			}
+			if (!name.equals(pathLastSegment)) manager.createMarker();
+			else manager.deleteMarker();
+		}
+		catch (CoreException e)
+		{
+			e.printStackTrace();
 		}
 	}
 	
