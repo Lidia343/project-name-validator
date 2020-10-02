@@ -38,7 +38,6 @@ public class ChangedNameValidator
 	{
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		IProject[] projects = workspace.getRoot().getProjects();
-		if (projects == null) return;
 		for (IProject project : projects)
 		{
 			validateProjectName(project);
