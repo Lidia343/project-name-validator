@@ -15,9 +15,13 @@ import org.eclipse.core.runtime.CoreException;
 import project.name.validator.marker.ProblemNameMarkerManager;
 import project.name.validator.refresh.RefreshExecutor;
 
+/**
+ * Класс для проверки имени каждого проекта, входящего в Workspace,
+ * на идентичность имени папки проекта в файловой системе.
+ */
 public class ChangedNameValidator
 {	
-	private IResource m_preChangeResource;
+	private String m_resourceValidName;
 	
 	private ProblemNameMarkerManager m_markerManager;
 	
@@ -25,6 +29,11 @@ public class ChangedNameValidator
 	
 	private RefreshExecutor m_refreshExecutor= new RefreshExecutor();
 	
+	/**
+	 * Проверяет имена уже существующих в рабочей области проектов.
+	 * Если имя проекта не совпадает с именем папки проекта в
+	 * файловой системе, на проект ставится маркер проблемы.
+	 */
 	public void validateExistingProjectNames ()
 	{
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
@@ -36,10 +45,18 @@ public class ChangedNameValidator
 		}
 	}
 	
+	/**
+	 * Проверяет имя проекта a_project.
+	 * Если имя проекта не совпадает с именем папки проекта в
+	 * файловой системе, на проект ставится маркер проблемы.
+	 * @param a_project
+	 * 		  Проект, имя которого необходимо проверить. NotNull
+	 */
 	private void validateProjectName (IProject a_project)
 	{
+		if (!a_project.exists()) return;
 		String name = a_project.getName();
-		String pathLastSegment = a_project.getFullPath().lastSegment();
+		String pathLastSegment = a_project.getLocation().lastSegment();
 		if (!name.equals(pathLastSegment))
 		{
 			ProblemNameMarkerManager manager = new ProblemNameMarkerManager(a_project);
@@ -54,6 +71,13 @@ public class ChangedNameValidator
 		}
 	}
 	
+	/**
+	 * Добавляет к рабочей области слушатели изменения имени
+	 * проекта. Если имя проекта не совпадает с именем папки
+	 * проекта в файловой системе, на проект ставится маркер
+	 * проблемы. После исправления проблемы пользователем
+	 * маркер удаляется.
+	 */
 	public void addChangedNameListeners ()
 	{
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
@@ -62,6 +86,14 @@ public class ChangedNameValidator
 		workspace.addResourceChangeListener (createPostBuildListener(), IResourceChangeEvent.POST_BUILD);
 	}
 	
+	/**
+	 * Создаёт слушатель изменения ресурса (для события
+	 * IResourceChangeEvent.PRE_DELETE). Если изменяемый ресурс
+	 * не равен null и является проектом, в слушателе полю,
+	 * соответствующему имени папки текущего проверяемого проекта,
+	 * присваивается имя папки изменяемого ресурса.
+	 * @return слушатель изменения ресурса
+	 */
 	private IResourceChangeListener createPreChangeListener ()
 	{
 		return new IResourceChangeListener ()
@@ -71,11 +103,21 @@ public class ChangedNameValidator
 			{
 				IResource resource = a_event.getResource();
 				if (resource == null  || resource.getType() != IResource.PROJECT) return;
-				m_preChangeResource = resource;
+				m_resourceValidName = resource.getLocation().lastSegment();
 			}
 		};
 	}
 	
+	/**
+	 * Создаёт слушатель изменения ресурса (для события
+	 * IResourceChangeEvent.PRE_REFRESH). На основании результата
+	 * сравнения имени проекта и имени папки проекта слушатель
+	 * присваивает полю для хранения информации о необходимости
+	 * создания маркера на текущем проверяемом проекте значение
+	 * true (если имена не идентичны) или false (если имена
+	 * идентичны).
+	 * @return слушатель изменения ресурса
+	 */
 	private IResourceChangeListener createPreRefreshListener ()
 	{
 		return new IResourceChangeListener ()
@@ -83,23 +125,33 @@ public class ChangedNameValidator
 			@Override
 			public void resourceChanged (IResourceChangeEvent a_event)
 			{
-				if (m_preChangeResource == null) return;
-				
-				String pathLastSegment = m_preChangeResource.getFullPath().lastSegment();
+				if (m_resourceValidName == null) return;
 				
 				IResource preRefreshResource = a_event.getResource();
 				if (preRefreshResource == null) return;
 				String newName = preRefreshResource.getName();
 				
-				if (!newName.equals(pathLastSegment)) m_createProblemMarker = true;
+				if (!newName.equals(m_resourceValidName)) m_createProblemMarker = true;
 				else m_createProblemMarker = false;
 				
-				IProject project = preRefreshResource.getProject();
-				if (project != null && project.exists()) m_markerManager = new ProblemNameMarkerManager(project);
+				if (preRefreshResource.exists()) m_markerManager = new ProblemNameMarkerManager(preRefreshResource);
 			}
 		};
 	}
 	
+	/**
+	 * Создаёт слушатель изменения ресурса (для события
+	 * IResourceChangeEvent.POST_BUILD). На основании значения
+	 * поля для хранения информации о необходимости
+	 * создания маркера на текущем проверяемом проекте слушатель
+	 * вызывает метод создания или удаления маркера из класса
+	 * ProblemNameMarkerManager. Если создание/удаление
+	 * произошло, происходит обновление всех проектов, в ином
+	 * случае (например, когда пользователь повторно неверно
+	 * переименовал проект, и на нём уже стоит маркер),
+	 * обновление не производится.
+	 * @return слушатель изменения ресурса
+	 */
 	private IResourceChangeListener createPostBuildListener ()
 	{
 		return new IResourceChangeListener ()
@@ -107,7 +159,9 @@ public class ChangedNameValidator
 			@Override
 			public void resourceChanged (IResourceChangeEvent a_event)
 			{
-				if (m_markerManager == null || m_markerManager.getProject() == null) return;
+				if (m_markerManager == null) return;
+				IResource resource =  m_markerManager.getResource();
+				if (resource == null || !resource.exists()) return;
 				try
 				{
 					boolean changed = false;
