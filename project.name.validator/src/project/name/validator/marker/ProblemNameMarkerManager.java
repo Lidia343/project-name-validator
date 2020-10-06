@@ -87,6 +87,7 @@ public class ProblemNameMarkerManager
 	 */
 	public IMarker findMarker () throws CoreException
 	{
+		if (!isProjectOpen()) return null;
 		IMarker[] markers = m_resource.findMarkers(IMarker.PROBLEM, false, IResource.DEPTH_INFINITE);
 		for (IMarker marker : markers)
 		{
@@ -104,5 +105,15 @@ public class ProblemNameMarkerManager
 	public IResource getResource ()
 	{
 		return m_resource;
+	}
+	
+	/**
+	 * @return true - если проект переданного в конструктор
+	 * ресурса открыт, false - иначе
+	 */
+	public boolean isProjectOpen ()
+	{
+		return (m_resource != null && m_resource.getProject() != null &&
+				m_resource.getProject().isOpen()) ? true : false;
 	}
 }
