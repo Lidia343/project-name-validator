@@ -14,13 +14,13 @@ public class Startup implements IStartup
 	 * Создаёт объект класса ChangedNameValidator и
 	 * вызывает его методы для проверки имён проектов,
 	 * существующих в Workspace, и для установки
-	 * слушателей изменения имени проекта.
+	 * слушателя изменения имени проекта.
 	 */
 	@Override
 	public void earlyStartup ()
 	{
 		ChangedNameValidator validator = new ChangedNameValidator();
 		validator.validateExistingProjectNames();
-		validator.addChangedNameListeners();
+		validator.addChangedNameListener();
 	}
 }
