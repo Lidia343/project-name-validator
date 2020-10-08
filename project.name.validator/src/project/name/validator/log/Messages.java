@@ -26,7 +26,5 @@ public class Messages extends NLS
 	public static String Exception_Marker_Creation;
 	
 	public static String Exception_Marker_Deletion;
-	
-	public static String Exception_Workspace_Refreshing;
 }
 
