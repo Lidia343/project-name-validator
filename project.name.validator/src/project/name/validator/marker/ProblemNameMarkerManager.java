@@ -41,7 +41,7 @@ public class ProblemNameMarkerManager
 	 */
 	public boolean createMarker () throws CoreException
 	{
-		if (markerExists()) return false;
+		if (!isProjectOpen() || markerExists()) return false;
 		IMarker marker = m_resource.createMarker(IMarker.PROBLEM);
 		marker.setAttribute(MARKER_ATTRIBUTE_PROBLEM_NAME, MARKER_ATTRIBUTE_VALUE_PROBLEM_NAME);
 		marker.setAttribute(IMarker.LOCATION, m_resource.getLocation().toString());
@@ -88,7 +88,7 @@ public class ProblemNameMarkerManager
 	public IMarker findMarker () throws CoreException
 	{
 		if (!isProjectOpen()) return null;
-		IMarker[] markers = m_resource.findMarkers(IMarker.PROBLEM, false, IResource.DEPTH_INFINITE);
+		IMarker[] markers = m_resource.findMarkers(IMarker.PROBLEM, false, IResource.DEPTH_ZERO);
 		for (IMarker marker : markers)
 		{
 			if (marker.getAttribute(MARKER_ATTRIBUTE_PROBLEM_NAME, null) != null)
@@ -113,7 +113,7 @@ public class ProblemNameMarkerManager
 	 */
 	public boolean isProjectOpen ()
 	{
-		return (m_resource != null && m_resource.getProject() != null &&
+		return (m_resource != null && m_resource.exists() && m_resource.getProject() != null &&
 				m_resource.getProject().isOpen()) ? true : false;
 	}
 }
