@@ -2,10 +2,22 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension
+         id="project.name.validator.startup"
+         name="Startup"
          point="org.eclipse.ui.startup">
       <startup
             class="project.name.validator.main.Startup">
       </startup>
+   </extension>
+   <extension
+         id="project.name.validator.propertyPage"
+         name="Property Page"
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="project.name.validator.ui.RenameIgnoringPropertyPage"
+            id="project.name.validator.renameIgnoringPropertyPage"
+            name="Переименование проекта">
+      </page>
    </extension>
 
 </plugin>
