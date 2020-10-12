@@ -10,6 +10,7 @@ import org.eclipse.ui.IWorkbenchPropertyPage;
 import org.eclipse.ui.dialogs.PropertyPage;
 
 import project.name.validator.ChangedNameValidator;
+import project.name.validator.log.ErrorStatusHandler;
 import project.name.validator.property.RenameIgnoringProperty;
 
 public class RenameIgnoringPropertyPage extends PropertyPage implements IWorkbenchPropertyPage
@@ -34,7 +35,7 @@ public class RenameIgnoringPropertyPage extends PropertyPage implements IWorkben
 		}
 		catch (CoreException e)
 		{
-			
+			ErrorStatusHandler.log(e, e.getMessage());
 		}	
 		return a_parent;
 	}
@@ -50,7 +51,7 @@ public class RenameIgnoringPropertyPage extends PropertyPage implements IWorkben
 		}
 		catch (CoreException e)
 		{
-			
+			ErrorStatusHandler.log(e, e.getMessage());
 		}
 	}
 	
@@ -64,7 +65,7 @@ public class RenameIgnoringPropertyPage extends PropertyPage implements IWorkben
 		}
 		catch (CoreException e)
 		{
-			
+			ErrorStatusHandler.log(e, e.getMessage());
 		}
 		return true;
 	}

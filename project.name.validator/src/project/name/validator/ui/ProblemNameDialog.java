@@ -14,6 +14,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.PlatformUI;
 
+import project.name.validator.log.ErrorStatusHandler;
 import project.name.validator.property.RenameIgnoringProperty;
 
 public class ProblemNameDialog extends Dialog
@@ -78,7 +79,7 @@ public class ProblemNameDialog extends Dialog
 		}
 		catch (CoreException e)
 		{
-			
+			ErrorStatusHandler.log(e, e.getMessage());
 		}
 	}
 }
