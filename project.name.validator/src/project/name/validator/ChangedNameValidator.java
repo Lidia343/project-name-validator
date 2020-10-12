@@ -23,7 +23,8 @@ import project.name.validator.property.RenameIgnoringProperty;
 public class ChangedNameValidator
 {
 	/**
-	 * Проверяет имена уже существующих в рабочей области проектов.
+	 * Проверяет имена уже существующих в рабочей области проектов,
+	 * не занесённых пользователем в исключения.
 	 * Если имя проекта не совпадает с именем папки проекта в
 	 * файловой системе, на проект ставится маркер проблемы, иначе
 	 * маркер удаляется.
@@ -38,6 +39,16 @@ public class ChangedNameValidator
 		}
 	}
 	
+	/**
+	 * Метод, определяющий необходимость проверки проекта, передаваемого
+	 * в качестве параметра.
+	 * @param a_project
+	 * 		  Проект, для которого необходимо определить, занесён ли он
+	 * 		  пользователем в исключения
+	 * @return true, если проект занесён в исключения (то есть свойство,
+	 * определяющее, нужно ли игнорировать переименование проекта,
+	 * существует и его значение равно true), false - иначе
+	 */
 	public boolean ignoreProject (IProject a_project)
 	{
 		try
@@ -53,6 +64,12 @@ public class ChangedNameValidator
 		}
 	}
 	
+	/**
+	 * @param a_project
+	 * 		  Проект для проверки
+	 * @return true в случае существования свойства RenameIgnoringProperty
+	 * на проекте a_project, false - иначе
+	 */
 	private boolean renameIgnoringPropertyExists (IProject a_project)
 	{
 		try
@@ -72,11 +89,25 @@ public class ChangedNameValidator
 	 * Если имя проекта не совпадает с именем папки проекта в
 	 * файловой системе, на проект ставится маркер проблемы,
 	 * иначе маркер удаляется.
+	 * Если параметр a_createWarningDialog равен true, в случае
+	 * несовпадения имён и несуществования на проекте свойства
+	 * RenameIgnoringProperty метод создаёт диалоговое окно с
+	 * предупреждением пользователю и возможностью выбрать,
+	 * нужно ли заносить проект a_project в исключения.
 	 * @param a_project
 	 * 		  Проект, имя которого необходимо проверить. NotNull
+	 * @param a_createWarningDialog
+	 * 		  Параметр, определяющий нужно ли создавать диалоговое
+	 * 		  окно с предупреждением в случае несовпадения имени
+	 * 		  проекта и имени его папки и несуществования свойства
+	 * 		  RenameIgnoringProperty на проекте
 	 */
 	public void validateProjectName (IProject a_project, boolean a_createWarningDialog)
 	{
+		/**
+		 * Если проект занесён в исключения, следует вызвать метод
+		 * ProblemNameMarkerManager.deleteMarker, который удалит
+		 * маркер, если он существует:*/
 		ProblemNameMarkerManager manager = new ProblemNameMarkerManager(a_project);
 		if (ignoreProject(a_project))
 		{
@@ -100,6 +131,10 @@ public class ChangedNameValidator
 						dialog.open();
 				    }
 				});
+				/**
+				 * Если пользователь с помощью диалогового окна занёс
+				 * проект в исключения, необходимость создания маркера
+				 * отсутствует:*/
 				if (ignoreProject(a_project)) return;
 			}
 			try
@@ -114,6 +149,13 @@ public class ChangedNameValidator
 		else deleteMarker(manager);
 	}
 	
+	/**
+	 * Метод удаляет маркер проблемного имени проекта, если он
+	 * существует.
+	 * @param a_manager
+	 * 	      Объект, с помощью которого происходит удаление
+	 * 		  маркера
+	 */
 	private void deleteMarker (ProblemNameMarkerManager a_manager)
 	{
 		try
@@ -129,9 +171,9 @@ public class ChangedNameValidator
 	/**
 	 * Добавляет к рабочей области слушатель изменения имени
 	 * проекта. Если имя проекта не совпадает с именем папки
-	 * проекта в файловой системе, на проект ставится маркер
-	 * проблемы. После исправления проблемы пользователем
-	 * маркер удаляется.
+	 * проекта в файловой системе, и проект не занесён в
+	 * исключения, на него ставится маркер проблемы. После
+	 * исправления проблемы пользователем маркер удаляется.
 	 */
 	public void addChangedNameListener ()
 	{
@@ -142,12 +184,8 @@ public class ChangedNameValidator
 	
 	/**
 	 * Создаёт слушатель изменения ресурса (для события
-	 * IResourceChangeEvent.POST_BUILD). В зависимости от
-	 * результата сравнения имени проекта ресурса с именем
-	 * его папки в файловой системе слушатель вызывает метод
-	 * создания маркера (если имена не совпадают) или его
-	 * удаления (если они совпадают) из класса
-	 * ProblemNameMarkerManager.
+	 * IResourceChangeEvent.POST_BUILD). Слушатель вызывает
+	 * метод проверки имени проекта ресурса ("validateProjectName").
 	 * @return слушатель изменения ресурса
 	 */
 	private IResourceChangeListener createPostBuildListener ()
