@@ -9,10 +9,12 @@ import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.ui.PlatformUI;
 
 import project.name.validator.log.ErrorStatusHandler;
-import project.name.validator.log.Messages;
 import project.name.validator.marker.ProblemNameMarkerManager;
+import project.name.validator.ui.ProblemNameDialog;
+import project.name.validator.property.RenameIgnoringProperty;
 
 /**
  * Класс для проверки имени каждого проекта, входящего в Workspace,
@@ -32,7 +34,36 @@ public class ChangedNameValidator
 		IProject[] projects = workspace.getRoot().getProjects();
 		for (IProject project : projects)
 		{
-			validateProjectName(project);
+			if (project.isOpen()) validateProjectName(project, false);
+		}
+	}
+	
+	public boolean ignoreProject (IProject a_project)
+	{
+		try
+		{
+			RenameIgnoringProperty property = new RenameIgnoringProperty(a_project);
+			if (property.exists() && property.getValue()) return true;
+			return false;
+		}
+		catch(CoreException e)
+		{
+			ErrorStatusHandler.log(e, e.getMessage());
+			return false;
+		}
+	}
+	
+	private boolean renameIgnoringPropertyExists (IProject a_project)
+	{
+		try
+		{
+			RenameIgnoringProperty property = new RenameIgnoringProperty(a_project);
+			return property.exists() ? true : false;
+		}
+		catch(CoreException e)
+		{
+			ErrorStatusHandler.log(e, e.getMessage());
+			return false;
 		}
 	}
 	
@@ -44,15 +75,33 @@ public class ChangedNameValidator
 	 * @param a_project
 	 * 		  Проект, имя которого необходимо проверить. NotNull
 	 */
-	private void validateProjectName (IProject a_project)
+	public void validateProjectName (IProject a_project, boolean a_createWarningDialog)
 	{
+		ProblemNameMarkerManager manager = new ProblemNameMarkerManager(a_project);
+		if (ignoreProject(a_project))
+		{
+			deleteMarker(manager);
+			return;
+		}
 		String name = a_project.getName();
 		IPath location = a_project.getLocation();
 		if (location == null) return;
 		String pathLastSegment = location.lastSegment();
-		ProblemNameMarkerManager manager = new ProblemNameMarkerManager(a_project);
 		if (!name.equals(pathLastSegment))
 		{
+			if (a_createWarningDialog && !renameIgnoringPropertyExists(a_project))
+			{
+				PlatformUI.getWorkbench().getDisplay().syncExec(new Runnable()
+				{
+				    @Override
+				    public void run ()
+				    {
+				    	ProblemNameDialog dialog = new ProblemNameDialog(a_project);
+						dialog.open();
+				    }
+				});
+				if (ignoreProject(a_project)) return;
+			}
 			try
 			{
 				manager.createMarker();
@@ -62,16 +111,18 @@ public class ChangedNameValidator
 				ErrorStatusHandler.log(e, Messages.Exception_Marker_Creation);
 			}
 		}
-		else
+		else deleteMarker(manager);
+	}
+	
+	private void deleteMarker (ProblemNameMarkerManager a_manager)
+	{
+		try
 		{
-			try
-			{
-				manager.deleteMarker();
-			}
-			catch (CoreException e)
-			{
-				ErrorStatusHandler.log(e, Messages.Exception_Marker_Deletion);
-			}
+			a_manager.deleteMarker();
+		}
+		catch (CoreException e)
+		{
+			ErrorStatusHandler.log(e, Messages.Exception_Marker_Deletion);
 		}
 	}
 	
@@ -115,7 +166,8 @@ public class ChangedNameValidator
 					
 					if (resource == null || !resource.exists() || resource.getType() != IResource.PROJECT) continue;
 					
-					validateProjectName(resource.getProject());
+					IProject project = resource.getProject();
+					validateProjectName(project, true);
 				}
 			}
 		};
