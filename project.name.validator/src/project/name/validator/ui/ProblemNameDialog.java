@@ -17,12 +17,26 @@ import org.eclipse.ui.PlatformUI;
 import project.name.validator.log.ErrorStatusHandler;
 import project.name.validator.property.RenameIgnoringProperty;
 
+/**
+ * Диалог, предупреждающий пользователя о том,
+ * что переименовывать проект нежелательно, и
+ * предлагающий добавить проект в исключения.
+ */
 public class ProblemNameDialog extends Dialog
 {
 	private String m_warningMessage = "";
 	
 	private RenameIgnoringProperty m_property;
 	
+	/**
+	 * Конструктор класса ProblemNameDialog.
+	 * Создаёт объект класса RenameIgnoringProperty
+	 * для проекта a_project и устанавливает
+	 * предупреждающее сообщение.
+	 * @param a_project
+	 * 		  Проект, с которым связано диалоговое
+	 * 		  окно
+	 */
 	public ProblemNameDialog (IProject a_project)
 	{
 		super(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
@@ -30,6 +44,14 @@ public class ProblemNameDialog extends Dialog
 		setWarningMessage(a_project);
 	}
 	
+	/**
+	 * Устанавливает предупреждающее сообщение
+	 * о последствии переименования проекта
+	 * a_project.
+	 * @param a_project
+	 * 		  Проект, с которым связано диалоговое
+	 * 		  окно
+	 */
 	private void setWarningMessage (IProject a_project)
 	{
 		String projectName = "";
@@ -60,6 +82,11 @@ public class ProblemNameDialog extends Dialog
 	@Override
 	public void okPressed()
 	{
+		/*
+		 * Установка свойству RenameIgnoringProperty
+		 * значения true, что означает, что проект
+		 * находится в исключениях:
+		 */
 		setRenameIgnoringProperty(true);
 		super.okPressed();
 	}
@@ -67,10 +94,21 @@ public class ProblemNameDialog extends Dialog
 	@Override
 	public void cancelPressed()
 	{
+		/*
+		 * Установка свойству RenameIgnoringProperty
+		 * значения false, что означает, что проект
+		 * не находится в исключениях:
+		 */
 		setRenameIgnoringProperty(false);
 		super.cancelPressed();
 	}
 	
+	/**
+	 * Устанавливает значение свойства
+	 * RenameIgnoringProperty.
+	 * @param a_property
+	 * 		  Значение свойства RenameIgnoringProperty
+	 */
 	private void setRenameIgnoringProperty (boolean a_property)
 	{
 		try

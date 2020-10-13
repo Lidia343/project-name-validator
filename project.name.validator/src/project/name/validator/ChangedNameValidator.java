@@ -92,8 +92,8 @@ public class ChangedNameValidator
 	 * Если параметр a_createWarningDialog равен true, в случае
 	 * несовпадения имён и несуществования на проекте свойства
 	 * RenameIgnoringProperty метод создаёт диалоговое окно с
-	 * предупреждением пользователю и возможностью выбрать,
-	 * нужно ли заносить проект a_project в исключения.
+	 * предупреждением пользователю и возможностью выбрать, нужно
+	 * ли заносить проект a_project в исключения.
 	 * @param a_project
 	 * 		  Проект, имя которого необходимо проверить. NotNull
 	 * @param a_createWarningDialog
@@ -106,8 +106,8 @@ public class ChangedNameValidator
 	{
 		/**
 		 * Если проект занесён в исключения, следует вызвать метод
-		 * ProblemNameMarkerManager.deleteMarker, который удалит
-		 * маркер, если он существует:*/
+		 * ProblemNameMarkerManager.deleteMarker, который
+		 * удалит маркер, если он существует:*/
 		ProblemNameMarkerManager manager = new ProblemNameMarkerManager(a_project);
 		if (ignoreProject(a_project))
 		{

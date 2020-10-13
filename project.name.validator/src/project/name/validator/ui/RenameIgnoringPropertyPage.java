@@ -13,6 +13,10 @@ import project.name.validator.ChangedNameValidator;
 import project.name.validator.log.ErrorStatusHandler;
 import project.name.validator.property.RenameIgnoringProperty;
 
+/**
+ * Страница свойства RenameIgnoringProperty для проекта
+ * в рабочем пространстве.
+ */
 public class RenameIgnoringPropertyPage extends PropertyPage implements IWorkbenchPropertyPage
 {
 	public static final String RENAME_IGNORING_MESSAGE = "Игнорировать приводящее к несовпадению имени проекта и " +
@@ -70,6 +74,10 @@ public class RenameIgnoringPropertyPage extends PropertyPage implements IWorkben
 		return true;
 	}
 	
+	/**
+	 * Проверяет имя проекта на идентичность имени
+	 * его папки в файловой системе.
+	 */
 	private void validateProjectName ()
 	{
 		ChangedNameValidator validator = new ChangedNameValidator();
