@@ -10,6 +10,7 @@ import org.eclipse.ui.IWorkbenchPropertyPage;
 import org.eclipse.ui.dialogs.PropertyPage;
 
 import project.name.validator.ChangedNameValidator;
+import project.name.validator.ProjectValidator;
 import project.name.validator.log.ErrorStatusHandler;
 import project.name.validator.property.RenameIgnoringProperty;
 
@@ -80,8 +81,9 @@ public class RenameIgnoringPropertyPage extends PropertyPage implements IWorkben
 	 */
 	private void validateProjectName ()
 	{
-		ChangedNameValidator validator = new ChangedNameValidator();
 		IProject project = (IProject)getElement();
+		if (!new ProjectValidator(project).isProjectOpen()) return;
+		ChangedNameValidator validator = new ChangedNameValidator();
 		validator.validateProjectName(project, false);
 	}
 }
