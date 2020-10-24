@@ -5,6 +5,9 @@ import java.util.Objects;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
+
+import project.name.validator.ProjectValidator;
 
 /**
  * Класс для управления процессами создания и удаления
@@ -21,6 +24,8 @@ public class ProblemNameMarkerManager
 	
 	private IResource m_resource;
 	
+	private ProjectValidator m_projectValidator;
+	
 	/**
 	 * Конструктор класса ProblemNameMarkerManager.
 	 * @param a_resource
@@ -30,6 +35,7 @@ public class ProblemNameMarkerManager
 	public ProblemNameMarkerManager (IResource a_resource)
 	{
 		m_resource = Objects.requireNonNull(a_resource);
+		m_projectValidator = new ProjectValidator(m_resource);
 	}
 	
 	/**
@@ -41,10 +47,14 @@ public class ProblemNameMarkerManager
 	 */
 	public boolean createMarker () throws CoreException
 	{
-		if (!isProjectOpen() || markerExists()) return false;
+		if (!m_projectValidator.isProjectOpen() || markerExists()) return false;
 		IMarker marker = m_resource.createMarker(IMarker.PROBLEM);
 		marker.setAttribute(MARKER_ATTRIBUTE_PROBLEM_NAME, MARKER_ATTRIBUTE_VALUE_PROBLEM_NAME);
-		marker.setAttribute(IMarker.LOCATION, m_resource.getLocation().toString());
+		IPath location = m_resource.getLocation();
+		if (location != null)
+		{
+			marker.setAttribute(IMarker.LOCATION, location.toString());
+		}
 		marker.setAttribute(IMarker.MESSAGE, MARKER_ATTRIBUTE_VALUE_MESSAGE);
 		marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
 		marker.setAttribute(IMarker.USER_EDITABLE, false);
@@ -87,7 +97,7 @@ public class ProblemNameMarkerManager
 	 */
 	public IMarker findMarker () throws CoreException
 	{
-		if (!isProjectOpen()) return null;
+		if (!m_projectValidator.isProjectOpen()) return null;
 		IMarker[] markers = m_resource.findMarkers(IMarker.PROBLEM, false, IResource.DEPTH_ZERO);
 		for (IMarker marker : markers)
 		{
@@ -105,15 +115,5 @@ public class ProblemNameMarkerManager
 	public IResource getResource ()
 	{
 		return m_resource;
-	}
-	
-	/**
-	 * @return true - если проект переданного в конструктор
-	 * ресурса открыт, false - иначе
-	 */
-	public boolean isProjectOpen ()
-	{
-		return (m_resource != null && m_resource.exists() && m_resource.getProject() != null &&
-				m_resource.getProject().isOpen()) ? true : false;
 	}
 }

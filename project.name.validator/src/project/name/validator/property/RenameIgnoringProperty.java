@@ -7,6 +7,8 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.QualifiedName;
 
+import project.name.validator.ProjectValidator;
+
 /**
  * Свойство, определяющее необходимость игнорирования
  * переименования проекта в случае, когда оно приводит
@@ -22,6 +24,8 @@ public class RenameIgnoringProperty
 			
 	private IProject m_project;
 	
+	private ProjectValidator m_projectValidator;
+	
 	private QualifiedName m_qualifiedName;
 	
 	/**
@@ -36,6 +40,7 @@ public class RenameIgnoringProperty
 	public RenameIgnoringProperty (IProject a_project)
 	{
 		m_project = Objects.requireNonNull(a_project);
+		m_projectValidator = new ProjectValidator(m_project);
 		createQualifiedName(m_project);
 	}
 	
@@ -62,6 +67,7 @@ public class RenameIgnoringProperty
 	 */
 	public boolean exists () throws CoreException
 	{
+		if (!m_projectValidator.isProjectOpen()) return false;
 		String property = m_project.getPersistentProperty(m_qualifiedName);
 		return (property != null) ? true : false;
 	}
@@ -70,11 +76,12 @@ public class RenameIgnoringProperty
 	 * @return значение свойства RenameIgnoringProperty.
 	 * Возвращает true, если проект, обладающий свойством,
 	 * находится в исключениях, false - если не находится
-	 * в исключениях или не существует
+	 * в исключениях, не существует или закрыт
 	 * @throws CoreException
 	 */
 	public boolean getValue () throws CoreException
 	{
+		if (!m_projectValidator.isProjectOpen()) return false;
 		String property = m_project.getPersistentProperty(m_qualifiedName);
 		return (property == null) ? false : Boolean.parseBoolean(property);
 	}
@@ -87,6 +94,7 @@ public class RenameIgnoringProperty
 	 */
 	public void setValue (boolean a_ignoring) throws CoreException
 	{
+		if (!m_projectValidator.isProjectOpen()) return;
 		m_project.setPersistentProperty(m_qualifiedName, Boolean.toString(a_ignoring));
 	}
 }
